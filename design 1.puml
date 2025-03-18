@@ -1,0 +1,17 @@
+@startuml
+actor User
+participant "EventBridge (Scheduler)" as EventBridge
+participant "AWS Lambda Function" as Lambda
+participant "Mimicked Solcast Webapp" as Solcast
+participant "PostgreSQL Database" as PostgreSQL
+participant "CloudWatch Logs" as CloudWatch
+
+User -> EventBridge: Set up cron job (Every 60 mins)
+EventBridge -> Lambda: Trigger Lambda function
+Lambda -> Solcast: Fetch data (HTTP GET request)
+Solcast --> Lambda: Return JSON response
+Lambda -> Lambda: Process data (Convert kW to W)
+Lambda -> PostgreSQL: Store processed data
+PostgreSQL --> Lambda: Success/Failure
+Lambda -> CloudWatch: Log results
+@enduml
