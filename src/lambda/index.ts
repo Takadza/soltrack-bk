@@ -1,9 +1,7 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
-import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
 import { fetchSolcastData } from '../services/solcastService';
 import { storeData } from '../database/db';
-
-const secretsClient = new SecretsManagerClient({ region: process.env.AWS_REGION });
+import { fetchSecret } from '../utils/secrets'; 
 
 export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
     console.info('Lambda function invoked with event:', JSON.stringify(event));
@@ -14,11 +12,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
         }
 
         console.info('Fetching secret from Secrets Manager...');
-        const secretResponse = await secretsClient.send(new GetSecretValueCommand({
-            SecretId: process.env.SECRET_ARN!,
-        }));
-
-        const dbPassword = secretResponse.SecretString ? JSON.parse(secretResponse.SecretString).password : '';
+        const dbPassword = await fetchSecret(process.env.SECRET_ARN!);
         console.info('Secret fetched successfully');
 
         console.info('Fetching data from Solcast API...');
@@ -30,7 +24,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
         console.info('Processed data:', JSON.stringify(processedData));
 
         console.info('Storing data in PostgreSQL...');
-        await storeData(processedData, dbPassword);
+        await storeData(processedData, dbPassword); // Pass arguments separately
 
         console.info('Data processed and stored successfully');
         return {
@@ -50,6 +44,6 @@ const processData = (data: any) => {
     console.info('Processing data:', JSON.stringify(data));
     return {
         ...data,
-        pv_power_rooftop: data.pv_power_rooftop * 1000,
+        pv_power_rooftop: data.pv_power_rooftop * 1000, 
     };
 };
