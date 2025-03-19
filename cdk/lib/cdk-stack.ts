@@ -17,11 +17,11 @@ export class SoltrackStack extends cdk.Stack {
             subnetConfiguration: [
                 {
                     name: 'SoltrackPrivateSubnet',
-                    subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
+                    subnetType: ec2.SubnetType.PRIVATE_ISOLATED, 
                 },
                 {
                     name: 'SoltrackPublicSubnet',
-                    subnetType: ec2.SubnetType.PUBLIC,
+                    subnetType: ec2.SubnetType.PUBLIC, 
                 },
             ],
         });
@@ -33,18 +33,35 @@ export class SoltrackStack extends cdk.Stack {
             instanceType: ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE3, ec2.InstanceSize.MICRO),
             vpc,
             vpcSubnets: {
-                subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
+                subnetType: ec2.SubnetType.PRIVATE_ISOLATED, 
             },
             databaseName: 'soltrackdb',
             credentials: rds.Credentials.fromGeneratedSecret('soltrackadmin'),
             removalPolicy: cdk.RemovalPolicy.DESTROY,
         });
 
+        new ec2.InterfaceVpcEndpoint(this, 'SecretsManagerVpcEndpoint', {
+            vpc,
+            service: ec2.InterfaceVpcEndpointAwsService.SECRETS_MANAGER,
+            subnets: {
+                subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
+            },
+        });
+
+        new ec2.InterfaceVpcEndpoint(this, 'RDSEndpoint', {
+            vpc,
+            service: ec2.InterfaceVpcEndpointAwsService.RDS,
+            subnets: {
+                subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
+            },
+        });
+
+        // Create a Lambda function
         const lambdaFunction = new NodejsFunction(this, 'SoltrackLambda', {
             entry: path.join(__dirname, '../../dist/lambda/index.js'),
             handler: 'handler',
             runtime: lambda.Runtime.NODEJS_20_X,
-            timeout: cdk.Duration.seconds(60), 
+            timeout: cdk.Duration.seconds(60),
             memorySize: 256,
             bundling: {
                 forceDockerBundling: false,
@@ -61,7 +78,7 @@ export class SoltrackStack extends cdk.Stack {
             },
             vpc,
             vpcSubnets: {
-                subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
+                subnetType: ec2.SubnetType.PRIVATE_ISOLATED, 
             },
             tracing: lambda.Tracing.ACTIVE,
         });
