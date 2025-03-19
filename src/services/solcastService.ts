@@ -5,9 +5,9 @@ const SOLCAST_API_URL = 'https://script.googleusercontent.com/macros/echo?user_c
 export const fetchSolcastData = async () => {
     try {
         console.info('Fetching data from Solcast API...');
-        const response = await axios.get(SOLCAST_API_URL, { timeout: 5000 }); // 5-second timeout
-        console.info('Data fetched successfully from Solcast API');
-        return response.data;
+        const response = await axios.get(SOLCAST_API_URL, { timeout: 5000 }); 
+        console.info('Raw response from Solcast API:', JSON.stringify(response.data));
+        return response.data; 
     } catch (error) {
         console.error('Error fetching data from Solcast API:', error);
         throw error;
